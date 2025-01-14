@@ -6,7 +6,7 @@ using RT.Util.ExtensionMethods;
 
 namespace CmdTools
 {
-    [CommandLine, Documentation("Performs a base conversion of an integer.")]
+    [Documentation("Performs a base conversion of an integer.")]
     public class BaseConverterCmd : CmdToolsBase, ICommandLineValidatable
     {
         [IsPositional, IsMandatory, Documentation("Specifies the integer to convert.")]

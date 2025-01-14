@@ -1,11 +1,12 @@
 ﻿using System.Text.RegularExpressions;
 using RT.CommandLine;
+using RT.Util.Consoles;
 using RT.Util.ExtensionMethods;
 
 namespace CmdTools
 {
-    [CommandLine, Documentation("Performs regular expression operations.")]
-    public class RegularExpressionProcessorCmd : CmdToolsBase
+    [Documentation("Performs regular expression operations.")]
+    public class RegularExpressionProcessorCmd : CmdToolsBase, ICommandLineValidatable
     {
         [IsPositional, IsMandatory, Documentation("Specifies a regular expression to match against the input text.")]
         public string RegularExpression = null;
@@ -13,14 +14,30 @@ namespace CmdTools
         [Option("-r", "--replace-with"), DocumentationEggsML("If specified, matches of &<<*RegularExpression*>>& are replaced with &<<*ReplaceWith*>>&, and lines that do not match &<<*RegularExpression*>>& are kept unaltered. *$$0* can be used to refer to the input string, *$$1* to the first capture group etc. If unspecified, lines that do not match &<<*RegularExpression*>>& are filtered out.")]
         public string ReplaceWith = null;
 
-        [Option("-a", "--all"), Documentation("Specifies that the whole input should be matched as a single string, as opposed to each line.")]
+        [Option("-a", "--all"), Documentation("Specifies that the whole input should be matched as a single string, as opposed to each line. Can only be used with ^*-r*^.")]
         public bool All = false;
 
         [Option("-u", "--up-to"), DocumentationEggsML("Specifies a maximum number of replacements. Can only be used with ^*-r*^.")]
         public int? UpTo = null;
 
+        [Option("-v", "--invert"), DocumentationEggsML("Inversion: outputs only lines that did not match. Can not be used with ^*-a*^ or ^*-r*^.")]
+        public bool Invert = false;
+
         [EnumOptions(EnumBehavior.MultipleValues)]
         public OptionFlags Options = 0;
+
+        public ConsoleColoredString Validate()
+        {
+            if (UpTo != null && ReplaceWith == null)
+                return $"The ^*-u*^/^*--up-to*^ option can only be used alongside ^*-r*^/^*--replace-with*^.";
+            if (All && ReplaceWith == null)
+                return $"The ^*-a*^/^*--all*^ option can only be used alongside ^*-r*^/^*--replace-with*^.";
+            if (Invert && ReplaceWith != null)
+                return $"The ^*-v*^/^*--invert*^ option cannot be used alongside ^*-r*^/^*--replace-with*^.";
+            if (Invert && All)
+                return $"The ^*-v*^/^*--invert*^ option cannot be used alongside ^*-a*^/^*--all*^.";
+            return null;
+        }
 
         [Flags]
         public enum OptionFlags
@@ -51,7 +68,7 @@ namespace CmdTools
         protected override int execute(TextReader input, TextWriter output)
         {
             var regex = new Regex(RegularExpression, (RegexOptions) Options);
-            string replacer(string input) => ReplaceWith == null ? regex.IsMatch(input) ? input : null : UpTo == null ? regex.Replace(input, ReplaceWith) : regex.Replace(input, ReplaceWith, UpTo.Value);
+            string replacer(string input) => ReplaceWith == null ? regex.IsMatch(input) ^ Invert ? input : null : UpTo == null ? regex.Replace(input, ReplaceWith) : regex.Replace(input, ReplaceWith, UpTo.Value);
 
             if (All)
                 output.Write(replacer(input.ReadToEnd()));

@@ -1,11 +1,8 @@
-﻿using System.Text;
-
-internal class RClip
+﻿namespace CmdTools
 {
-    [STAThread]
-    private static void Main()
+    public static class RClip
     {
-        try { Console.OutputEncoding = Encoding.UTF8; } catch { }
-        Console.Out.Write(Clipboard.GetText()); 
+        [STAThread]
+        private static int Main(string[] args) => RunCmdTool.Run<RClipCmd>(args);
     }
 }

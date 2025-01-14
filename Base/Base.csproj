@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="RT.CommandLine" Version="2.1.163" />
+    <PackageReference Include="RT.CommandLine" Version="2.2.193" />
   </ItemGroup>
 
   <ItemGroup>
